@@ -29,6 +29,5 @@ This project requires specific environment variables to interact with the YouTub
 To start the development server, run:
 
 ```bash
-Copy code
 pnpm dev
 ```
