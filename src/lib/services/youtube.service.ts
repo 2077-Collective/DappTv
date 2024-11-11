@@ -1,7 +1,25 @@
 import { VideoArraySchema, type Video } from '$lib/types/youtube';
 
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
-const CHANNEL_ID = 'UCQ8JsbQeXHAQznVuM6PdgOw';
+const CHANNEL_ID = import.meta.env.VITE_YOUTUBE_CHANNEL_ID;
+
+interface YouTubeSearchResponse {
+  items: Array<{
+    id: {
+      videoId: string;
+    };
+    snippet: {
+      title: string;
+      thumbnails: {
+        medium: {
+          url: string;
+        };
+      };
+      description: string;
+      publishedAt: string;
+    };
+  }>;
+}
 
 export const fetchChannelVideos = async (): Promise<Video[]> => {
   try {
@@ -13,10 +31,10 @@ export const fetchChannelVideos = async (): Promise<Video[]> => {
       throw new Error('Failed to fetch videos');
     }
 
-    const data = await response.json();
+    const data: YouTubeSearchResponse = await response.json();
 
     return VideoArraySchema.parse(
-      data.items.map((item: any) => ({
+      data.items.map((item) => ({
         id: item.id.videoId,
         title: item.snippet.title,
         thumbnail: item.snippet.thumbnails.medium.url,
@@ -26,6 +44,14 @@ export const fetchChannelVideos = async (): Promise<Video[]> => {
     );
   } catch (error) {
     console.error('Error fetching channel videos:', error);
-    throw new Error('Failed to fetch videos');
+    if (error instanceof Error) {
+      if (error.message.includes('quota')) {
+        throw new Error('YouTube API quota exceeded. Please try again later.');
+      }
+      if (error.message.includes('invalid_grant')) {
+        throw new Error('Authentication failed. Please check API key.');
+      }
+    }
+    throw new Error('Failed to fetch videos: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 };
