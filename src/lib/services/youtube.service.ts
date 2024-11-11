@@ -1,6 +1,6 @@
 import { VideoArraySchema, type Video } from '$lib/types/youtube';
 
-const API_KEY = 'AIzaSyBv5enOpSQQZOOUe4SoQ1WulPPqgG-YADA'; // Replace with your actual API key
+const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const CHANNEL_ID = 'UCQ8JsbQeXHAQznVuM6PdgOw';
 
 export const fetchChannelVideos = async (): Promise<Video[]> => {
