@@ -55,3 +55,43 @@ export const fetchChannelVideos = async (): Promise<Video[]> => {
     throw new Error('Failed to fetch videos: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 };
+
+export const searchVideos = async (query: string): Promise<Video[]> => {
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&q=${encodeURIComponent(query)}&part=snippet&type=video&maxResults=20`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch videos');
+    }
+
+    const data: YouTubeSearchResponse = await response.json();
+    return VideoArraySchema.parse(
+      data.items.map((item: {
+        id: {
+          videoId: string;
+        };
+        snippet: {
+          title: string;
+          thumbnails: {
+            medium: {
+              url: string;
+            };
+          };
+          description: string;
+          publishedAt: string;
+        };
+      }) => ({
+        id: item.id.videoId,
+        title: item.snippet.title,
+        thumbnail: item.snippet.thumbnails.medium.url,
+        description: item.snippet.description,
+        publishedAt: new Date(item.snippet.publishedAt),
+      }))
+    );
+  } catch (error) {
+    console.error('Search failed:', error);
+    throw error;
+  }
+};
